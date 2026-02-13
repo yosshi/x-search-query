@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X.com 検索クエリビルダー</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=LINE+Seed+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "LINE Seed JP", "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif;
+            background: #faf5ff;
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+            line-height: 1.65;
+            letter-spacing: 0.03em;
+        }
+
+        .container {
+            width: 100%;
+            margin: 0;
+            background: #faf5ff;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: hidden;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            margin: 0;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+        }
+
+        .header p {
+            display: none;
+        }
+
+        .content {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        /* グリッドレイアウトで2カラム表示(大画面) */
+        @media (min-width: 1024px) {
+            .content {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+                align-items: start;
+            }
+
+            .section {
+                margin-bottom: 0;
+            }
+
+            .result-section {
+                grid-column: 1 / -1;
+                margin-top: 0;
+            }
+
+            /* プリセットセクションも全幅 */
+            .section:first-child {
+                grid-column: 1 / -1;
+            }
+        }
+
+        .section-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #7c3aed;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f3e8ff;
+            letter-spacing: 0.05em;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 400;
+            color: #1f2937;
+            margin-bottom: 5px;
+            letter-spacing: 0.04em;
+            line-height: 1.5;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 2px solid #e9d5ff;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            line-height: 1.5;
+            letter-spacing: 0.02em;
+            color: #1f2937;
+            background: white;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        input[type="date"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #7c3aed;
+            background: #faf5ff;
+        }
+
+        /* 入力されている状態 */
+        input[type="text"]:not(:placeholder-shown),
+        input[type="text"].has-value,
+        input[type="number"].has-value,
+        input[type="date"].has-value,
+        select.has-value {
+            background: #f3e8ff;
+            border-color: #c084fc;
+            border-left: 4px solid #7c3aed;
+            font-weight: 700;
+            color: #7c3aed;
+        }
+
+        input::placeholder,
+        select::placeholder {
+            color: #9ca3af;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        @media (min-width: 1024px) {
+            .checkbox-group {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 8px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-item label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 400;
+            color: #1f2937;
+            transition: all 0.2s;
+        }
+
+        .checkbox-item input[type="checkbox"]:checked + label {
+            color: #7c3aed;
+            font-weight: 700;
+        }
+
+        .result-section {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            border: 2px solid #e9d5ff;
+        }
+
+        .result-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 10px;
+            letter-spacing: 0.04em;
+        }
+
+        .query-display {
+            background: #faf5ff;
+            border: 2px solid #e9d5ff;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: "Courier New", monospace;
+            font-size: 13px;
+            word-break: break-all;
+            min-height: 50px;
+            margin-bottom: 12px;
+            color: #7c3aed;
+        }
+
+        .query-display.empty {
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        button {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: inherit;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #7c3aed;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #6d28d9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f3e8ff;
+            color: #1f2937;
+            border: 1px solid #e9d5ff;
+        }
+
+        .btn-secondary:hover {
+            background: #e9d5ff;
+        }
+
+        .btn-success {
+            background: #ec4899;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #db2777;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #ec4899;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s;
+            pointer-events: none;
+            font-size: 14px;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 40px rgba(124, 58, 237, 0.3);
+            border: 2px solid #e9d5ff;
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 2px solid #f3e8ff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0;
+            letter-spacing: 0.05em;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: right;
+            line-height: 1;
+            flex-shrink: 0;
+            margin-left: auto;
+        }
+
+        .modal-close:hover {
+            color: #7c3aed;
+        }
+
+        .modal-body {
+            padding: 16px 20px;
+            overflow-y: auto;
+        }
+
+        .preset-item {
+            padding: 12px;
+            border: 2px solid #e9d5ff;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #faf5ff;
+        }
+
+        .preset-item:hover {
+            border-color: #7c3aed;
+            background: #f3e8ff;
+        }
+
+        .preset-info {
+            flex: 1;
+        }
+
+        .preset-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 3px;
+            letter-spacing: 0.04em;
+            line-height: 1.5;
+        }
+
+        .preset-description {
+            font-size: 12px;
+            color: #6b7280;
+            line-height: 1.6;
+            letter-spacing: 0.03em;
+        }
+
+        .preset-query {
+            font-size: 11px;
+            color: #a855f7;
+            font-family: "Courier New", monospace;
+            margin-top: 5px;
+            word-break: break-all;
+        }
+
+        .preset-actions {
+            display: flex;
+            gap: 6px;
+            margin-left: 12px;
+        }
+
+        .preset-delete {
+            background: #e0245e;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 6px 10px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .preset-delete:hover {
+            background: #c91f4d;
+        }
+
+        .preset-badge {
+            display: inline-block;
+            background: #7c3aed;
+            color: white;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 15px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .checkbox-group {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1023px) {
+            .content {
+                max-width: 900px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 X.com 検索クエリビルダー</h1>
+            <p>条件を入力して高度な検索クエリを簡単に作成</p>
+        </div>
+
+        <div class="content">
+            <!-- プリセット -->
+            <div class="section">
+                <div class="section-title">プリセット</div>
+                <div class="button-group" style="margin-bottom: 15px;">
+                    <button class="btn-primary" onclick="showPresetModal()">📂 プリセットを読み込む</button>
+                    <button class="btn-success" onclick="savePresetModal()">💾 現在の条件を保存</button>
+                </div>
+            </div>
+
+            <!-- 基本検索 -->
+            <div class="section">
+                <div class="section-title">基本検索</div>
+                <div class="form-group">
+                    <label for="keywords">キーワード</label>
+                    <input type="text" id="keywords" placeholder="検索したいキーワード">
+                </div>
+                <div class="form-group">
+                    <label for="exact-phrase">完全一致フレーズ</label>
+                    <input type="text" id="exact-phrase" placeholder="完全一致で検索したいフレーズ">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="or-keywords">いずれかを含む(OR検索)</label>
+                        <input type="text" id="or-keywords" placeholder="スペース区切りで入力">
+                    </div>
+                    <div class="form-group">
+                        <label for="exclude">除外ワード</label>
+                        <input type="text" id="exclude" placeholder="除外したいワード">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="hashtag">ハッシュタグ</label>
+                        <input type="text" id="hashtag" placeholder="#なしで入力">
+                    </div>
+                    <div class="form-group">
+                        <label for="cashtag">株式シンボル</label>
+                        <input type="text" id="cashtag" placeholder="$なしで入力">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ユーザー関連 -->
+            <div class="section">
+                <div class="section-title">ユーザー関連</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="from-user">投稿ユーザー(from:)</label>
+                        <input type="text" id="from-user" placeholder="@なしで入力">
+                    </div>
+                    <div class="form-group">
+                        <label for="to-user">リプライ先(to:)</label>
+                        <input type="text" id="to-user" placeholder="@なしで入力">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="mention">メンション(@)</label>
+                    <input type="text" id="mention" placeholder="@なしで入力">
+                </div>
+            </div>
+
+            <!-- 日付フィルター -->
+            <div class="section">
+                <div class="section-title">日付フィルター</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="since-date">開始日(since:)</label>
+                        <input type="date" id="since-date">
+                    </div>
+                    <div class="form-group">
+                        <label for="until-date">終了日(until:)</label>
+                        <input type="date" id="until-date">
+                    </div>
+                </div>
+            </div>
+
+            <!-- エンゲージメントフィルター -->
+            <div class="section">
+                <div class="section-title">エンゲージメントフィルター</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="min-retweets">最小リツイート数</label>
+                        <input type="number" id="min-retweets" min="0" placeholder="例: 100">
+                    </div>
+                    <div class="form-group">
+                        <label for="min-faves">最小いいね数</label>
+                        <input type="number" id="min-faves" min="0" placeholder="例: 500">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="min-replies">最小リプライ数</label>
+                    <input type="number" id="min-replies" min="0" placeholder="例: 10">
+                </div>
+            </div>
+
+            <!-- コンテンツタイプ -->
+            <div class="section">
+                <div class="section-title">コンテンツタイプ</div>
+
+                <label style="font-size: 12px; color: #6b7280; margin-bottom: 6px; display: block; font-weight: 600;">メディア</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="filter-links" value="links">
+                        <label for="filter-links">リンクを含む</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="filter-images" value="images">
+                        <label for="filter-images">画像を含む</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="filter-videos" value="videos">
+                        <label for="filter-videos">動画を含む</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="filter-media" value="media">
+                        <label for="filter-media">メディアを含む</label>
+                    </div>
+                </div>
+
+                <label style="font-size: 12px; color: #6b7280; margin-bottom: 6px; margin-top: 12px; display: block; font-weight: 600;">投稿タイプ</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="filter-retweets" value="retweets">
+                        <label for="filter-retweets">リツイートのみ</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="filter-nativeretweets" value="nativeretweets">
+                        <label for="filter-nativeretweets">通常のリツイート</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="filter-replies" value="replies">
+                        <label for="filter-replies">リプライのみ</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="filter-quote" value="quote">
+                        <label for="filter-quote">引用ツイート</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="filter-spaces" value="spaces">
+                        <label for="filter-spaces">Spaces</label>
+                    </div>
+                </div>
+
+                <label style="font-size: 12px; color: #6b7280; margin-bottom: 6px; margin-top: 12px; display: block; font-weight: 600;">ユーザー・品質</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="filter-verified" value="verified">
+                        <label for="filter-verified">認証済みアカウント</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="filter-follows" value="follows">
+                        <label for="filter-follows">フォロー中のユーザー</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="filter-safe" value="safe">
+                        <label for="filter-safe">センシティブ除外</label>
+                    </div>
+                </div>
+
+                <label style="font-size: 12px; color: #6b7280; margin-bottom: 6px; margin-top: 12px; display: block; font-weight: 600;">除外</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="exclude-retweets" value="retweets">
+                        <label for="exclude-retweets">リツイートを除外</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="exclude-replies" value="replies">
+                        <label for="exclude-replies">リプライを除外</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ソート順 -->
+            <div class="section">
+                <div class="section-title">ソート順</div>
+                <div class="form-group">
+                    <label for="sort-order">表示順</label>
+                    <select id="sort-order">
+                        <option value="">トップ(デフォルト)</option>
+                        <option value="live">最新</option>
+                        <option value="user">ユーザー</option>
+                        <option value="image">画像</option>
+                        <option value="video">動画</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 言語 -->
+            <div class="section">
+                <div class="section-title">言語とその他</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="language">言語</label>
+                        <select id="language">
+                            <option value="">選択しない</option>
+                            <option value="ja">日本語</option>
+                            <option value="en">英語</option>
+                            <option value="ko">韓国語</option>
+                            <option value="zh">中国語</option>
+                            <option value="es">スペイン語</option>
+                            <option value="fr">フランス語</option>
+                            <option value="de">ドイツ語</option>
+                            <option value="it">イタリア語</option>
+                            <option value="pt">ポルトガル語</option>
+                            <option value="ru">ロシア語</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="url-contains">含むURL</label>
+                        <input type="text" id="url-contains" placeholder="例: example.com">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 結果表示 -->
+            <div class="result-section">
+                <div class="result-title">生成された検索クエリ</div>
+                <div class="query-display" id="query-display">条件を入力すると検索クエリが表示されます</div>
+
+                <div class="result-title" style="margin-top: 20px;">生成されたURL</div>
+                <div class="query-display" id="url-display">条件を入力するとURLが表示されます</div>
+
+                <div class="button-group">
+                    <button class="btn-success" onclick="copyQuery()">📋 クエリをコピー</button>
+                    <button class="btn-success" onclick="copyUrl()">🔗 URLをコピー</button>
+                    <button class="btn-primary" onclick="searchOnX()">🔍 X.comで検索</button>
+                    <button class="btn-secondary" onclick="clearAll()">🗑️ すべてクリア</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">クエリをコピーしました!</div>
+
+    <!-- プリセット読み込みモーダル -->
+    <div class="modal" id="preset-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>プリセットを読み込む</h2>
+                <button class="modal-close" onclick="closePresetModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="preset-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- プリセット保存モーダル -->
+    <div class="modal" id="save-preset-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>プリセットを保存</h2>
+                <button class="modal-close" onclick="closeSavePresetModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="preset-name">プリセット名</label>
+                    <input type="text" id="preset-name" placeholder="例: 今日のニュース">
+                </div>
+                <div class="form-group">
+                    <label for="preset-description">説明(任意)</label>
+                    <input type="text" id="preset-description" placeholder="このプリセットの説明">
+                </div>
+                <div class="button-group">
+                    <button class="btn-success" onclick="savePreset()">💾 保存</button>
+                    <button class="btn-secondary" onclick="closeSavePresetModal()">キャンセル</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全ての入力要素を取得
+        const inputs = document.querySelectorAll('input, select');
+        const queryDisplay = document.getElementById('query-display');
+
+        // 入力変更時にクエリを更新
+        inputs.forEach(input => {
+            input.addEventListener('input', updateQuery);
+            input.addEventListener('change', updateQuery);
+        });
+
+        function updateQuery() {
+            const parts = [];
+
+            // 基本検索
+            const keywords = document.getElementById('keywords').value.trim();
+            if (keywords) parts.push(keywords);
+
+            const exactPhrase = document.getElementById('exact-phrase').value.trim();
+            if (exactPhrase) parts.push(`"${exactPhrase}"`);
+
+            const orKeywords = document.getElementById('or-keywords').value.trim();
+            if (orKeywords) {
+                const words = orKeywords.split(/\s+/);
+                if (words.length > 0) {
+                    parts.push(`(${words.join(' OR ')})`);
+                }
+            }
+
+            const exclude = document.getElementById('exclude').value.trim();
+            if (exclude) parts.push(`-${exclude}`);
+
+            const hashtag = document.getElementById('hashtag').value.trim();
+            if (hashtag) parts.push(`#${hashtag.replace(/^#/, '')}`);
+
+            const cashtag = document.getElementById('cashtag').value.trim();
+            if (cashtag) parts.push(`$${cashtag.replace(/^\$/, '')}`);
+
+            // ユーザー関連
+            const fromUser = document.getElementById('from-user').value.trim();
+            if (fromUser) parts.push(`from:${fromUser.replace(/^@/, '')}`);
+
+            const toUser = document.getElementById('to-user').value.trim();
+            if (toUser) parts.push(`to:${toUser.replace(/^@/, '')}`);
+
+            const mention = document.getElementById('mention').value.trim();
+            if (mention) parts.push(`@${mention.replace(/^@/, '')}`);
+
+            // 日付フィルター
+            const sinceDate = document.getElementById('since-date').value;
+            if (sinceDate) parts.push(`since:${sinceDate}`);
+
+            const untilDate = document.getElementById('until-date').value;
+            if (untilDate) parts.push(`until:${untilDate}`);
+
+            // エンゲージメントフィルター
+            const minRetweets = document.getElementById('min-retweets').value;
+            if (minRetweets) parts.push(`min_retweets:${minRetweets}`);
+
+            const minFaves = document.getElementById('min-faves').value;
+            if (minFaves) parts.push(`min_faves:${minFaves}`);
+
+            const minReplies = document.getElementById('min-replies').value;
+            if (minReplies) parts.push(`min_replies:${minReplies}`);
+
+            // コンテンツタイプ(filter:)
+            const filterCheckboxes = document.querySelectorAll('#filter-links, #filter-images, #filter-videos, #filter-media, #filter-retweets, #filter-replies, #filter-quote, #filter-verified, #filter-follows, #filter-safe, #filter-spaces, #filter-nativeretweets');
+            filterCheckboxes.forEach(cb => {
+                if (cb.checked) {
+                    parts.push(`filter:${cb.value}`);
+                }
+            });
+
+            // 除外フィルター
+            const excludeRetweets = document.getElementById('exclude-retweets');
+            if (excludeRetweets && excludeRetweets.checked) {
+                parts.push('-filter:retweets');
+            }
+
+            const excludeReplies = document.getElementById('exclude-replies');
+            if (excludeReplies && excludeReplies.checked) {
+                parts.push('-filter:replies');
+            }
+
+            // 言語
+            const language = document.getElementById('language').value;
+            if (language) parts.push(`lang:${language}`);
+
+            // URL
+            const urlContains = document.getElementById('url-contains').value.trim();
+            if (urlContains) parts.push(`url:${urlContains}`);
+
+            // クエリを結合して表示
+            const query = parts.join(' ');
+            const urlDisplay = document.getElementById('url-display');
+
+            if (query) {
+                queryDisplay.textContent = query;
+                queryDisplay.classList.remove('empty');
+
+                const encodedQuery = encodeURIComponent(query);
+                let url = `https://x.com/search?q=${encodedQuery}&src=typed_query`;
+
+                // ソート順を追加
+                const sortOrder = document.getElementById('sort-order').value;
+                if (sortOrder) {
+                    url += `&f=${sortOrder}`;
+                }
+
+                urlDisplay.textContent = url;
+                urlDisplay.classList.remove('empty');
+            } else {
+                queryDisplay.textContent = '条件を入力すると検索クエリが表示されます';
+                queryDisplay.classList.add('empty');
+
+                urlDisplay.textContent = '条件を入力するとURLが表示されます';
+                urlDisplay.classList.add('empty');
+            }
+        }
+
+        function copyQuery() {
+            const query = queryDisplay.textContent;
+            if (query && !queryDisplay.classList.contains('empty')) {
+                navigator.clipboard.writeText(query).then(() => {
+                    showToast('クエリをコピーしました!');
+                }).catch(err => {
+                    // フォールバック: テキストエリアを使用
+                    const textarea = document.createElement('textarea');
+                    textarea.value = query;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    showToast('クエリをコピーしました!');
+                });
+            }
+        }
+
+        function copyUrl() {
+            const urlDisplay = document.getElementById('url-display');
+            const url = urlDisplay.textContent;
+            if (url && !urlDisplay.classList.contains('empty')) {
+                navigator.clipboard.writeText(url).then(() => {
+                    showToast('URLをコピーしました!');
+                }).catch(err => {
+                    // フォールバック: テキストエリアを使用
+                    const textarea = document.createElement('textarea');
+                    textarea.value = url;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    showToast('URLをコピーしました!');
+                });
+            }
+        }
+
+        function searchOnX() {
+            const query = queryDisplay.textContent;
+            if (query && !queryDisplay.classList.contains('empty')) {
+                const encodedQuery = encodeURIComponent(query);
+                window.open(`https://x.com/search?q=${encodedQuery}&src=typed_query`, '_blank');
+            }
+        }
+
+        function clearAll() {
+            inputs.forEach(input => {
+                if (input.type === 'checkbox') {
+                    input.checked = false;
+                } else {
+                    input.value = '';
+                }
+            });
+            updateQuery();
+            updateInputState();
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message || 'コピーしました!';
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        // 入力フィールドの状態を更新
+        function updateInputState() {
+            const textInputs = document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], select');
+            textInputs.forEach(input => {
+                if (input.value && input.value.trim() !== '') {
+                    input.classList.add('has-value');
+                } else {
+                    input.classList.remove('has-value');
+                }
+            });
+        }
+
+        // 入力時に状態を更新
+        inputs.forEach(input => {
+            input.addEventListener('input', updateInputState);
+            input.addEventListener('change', updateInputState);
+        });
+
+        // 初期化
+        updateQuery();
+        updateInputState();
+
+        // ========== プリセット機能 ==========
+
+        // デフォルトプリセット
+        const defaultPresets = [
+            {
+                id: 'follows-latest',
+                name: 'フォロー中のユーザー 最新順',
+                description: 'フォローしている人の投稿を最新順で表示(RT除外)',
+                isDefault: true,
+                formValues: {
+                    'filter-follows': true,
+                    'exclude-retweets': true,
+                    'sort-order': 'live'
+                }
+            },
+            {
+                id: 'follows-images',
+                name: 'フォロー中のユーザー 画像付き',
+                description: 'フォローしている人の画像付き投稿(RT除外)',
+                isDefault: true,
+                formValues: {
+                    'filter-follows': true,
+                    'filter-images': true,
+                    'exclude-retweets': true,
+                    'sort-order': 'live'
+                }
+            },
+            {
+                id: 'viral-100',
+                name: 'リツイート 100 以上',
+                description: '100回以上リツイートされた人気ツイート',
+                isDefault: true,
+                formValues: {
+                    'min-retweets': '100',
+                    'exclude-retweets': true,
+                    'sort-order': 'top'
+                }
+            },
+            {
+                id: 'news-ja',
+                name: '今日のニュース(日本語)',
+                description: '今日の日本語ニュース記事(RT50以上)',
+                isDefault: true,
+                formValues: {
+                    'filter-links': true,
+                    'language': 'ja',
+                    'min-retweets': '50',
+                    'exclude-retweets': true,
+                    'sort-order': 'live'
+                }
+            },
+            {
+                id: 'viral-images',
+                name: '人気の画像',
+                description: 'いいね100以上の画像付き投稿',
+                isDefault: true,
+                formValues: {
+                    'filter-images': true,
+                    'min-faves': '100',
+                    'exclude-retweets': true,
+                    'exclude-replies': true,
+                    'sort-order': 'top'
+                }
+            },
+            {
+                id: 'original-only',
+                name: 'オリジナル投稿のみ',
+                description: 'RT・リプライを除外したオリジナル投稿',
+                isDefault: true,
+                formValues: {
+                    'exclude-retweets': true,
+                    'exclude-replies': true,
+                    'language': 'ja',
+                    'sort-order': 'live'
+                }
+            }
+        ];
+
+        // プリセットをlocalStorageから読み込む
+        function loadPresets() {
+            const stored = localStorage.getItem('x-search-presets');
+            const userPresets = stored ? JSON.parse(stored) : [];
+            return [...defaultPresets, ...userPresets];
+        }
+
+        // ユーザープリセットを保存
+        function savePresetsToStorage(presets) {
+            const userPresets = presets.filter(p => !p.isDefault);
+            localStorage.setItem('x-search-presets', JSON.stringify(userPresets));
+        }
+
+        // フォームの値を取得
+        function getFormValues() {
+            const values = {};
+            inputs.forEach(input => {
+                if (input.type === 'checkbox') {
+                    if (input.checked) {
+                        values[input.id] = true;
+                    }
+                } else if (input.value) {
+                    values[input.id] = input.value;
+                }
+            });
+            return values;
+        }
+
+        // フォームに値を設定
+        function setFormValues(values) {
+            // まずすべてクリア
+            clearAll();
+
+            // 値を設定
+            Object.keys(values).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    if (element.type === 'checkbox') {
+                        element.checked = values[key];
+                    } else {
+                        element.value = values[key];
+                    }
+                }
+            });
+
+            // クエリを更新
+            updateQuery();
+        }
+
+        // プリセット読み込みモーダルを表示
+        function showPresetModal() {
+            const modal = document.getElementById('preset-modal');
+            const presetList = document.getElementById('preset-list');
+            const presets = loadPresets();
+
+            if (presets.length === 0) {
+                presetList.innerHTML = '<p style="color: #6b7280; text-align: center;">保存されたプリセットがありません</p>';
+            } else {
+                presetList.innerHTML = presets.map(preset => {
+                    const query = generateQueryFromValues(preset.formValues);
+                    const badge = preset.isDefault ? '<span class="preset-badge">デフォルト</span>' : '';
+                    const deleteBtn = preset.isDefault ? '' : `<button class="preset-delete" onclick="deletePreset('${preset.id}'); event.stopPropagation();">削除</button>`;
+
+                    return `
+                        <div class="preset-item" onclick="loadPreset('${preset.id}')">
+                            <div class="preset-info">
+                                <div class="preset-name">${preset.name}${badge}</div>
+                                <div class="preset-description">${preset.description}</div>
+                                <div class="preset-query">${query}</div>
+                            </div>
+                            <div class="preset-actions">
+                                ${deleteBtn}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            modal.classList.add('show');
+        }
+
+        // プリセット読み込みモーダルを閉じる
+        function closePresetModal() {
+            const modal = document.getElementById('preset-modal');
+            modal.classList.remove('show');
+        }
+
+        // プリセット保存モーダルを表示
+        function savePresetModal() {
+            const query = queryDisplay.textContent;
+            if (!query || queryDisplay.classList.contains('empty')) {
+                showToast('検索条件を入力してください');
+                return;
+            }
+
+            const modal = document.getElementById('save-preset-modal');
+            document.getElementById('preset-name').value = '';
+            document.getElementById('preset-description').value = '';
+            modal.classList.add('show');
+        }
+
+        // プリセット保存モーダルを閉じる
+        function closeSavePresetModal() {
+            const modal = document.getElementById('save-preset-modal');
+            modal.classList.remove('show');
+        }
+
+        // プリセットを保存
+        function savePreset() {
+            const name = document.getElementById('preset-name').value.trim();
+            const description = document.getElementById('preset-description').value.trim();
+
+            if (!name) {
+                showToast('プリセット名を入力してください');
+                return;
+            }
+
+            const presets = loadPresets();
+            const newPreset = {
+                id: 'user-' + Date.now(),
+                name: name,
+                description: description || '',
+                isDefault: false,
+                formValues: getFormValues()
+            };
+
+            presets.push(newPreset);
+            savePresetsToStorage(presets);
+
+            closeSavePresetModal();
+            showToast('プリセットを保存しました');
+        }
+
+        // プリセットを読み込む
+        function loadPreset(presetId) {
+            const presets = loadPresets();
+            const preset = presets.find(p => p.id === presetId);
+
+            if (preset) {
+                setFormValues(preset.formValues);
+                closePresetModal();
+                showToast(`「${preset.name}」を読み込みました`);
+            }
+        }
+
+        // プリセットを削除
+        function deletePreset(presetId) {
+            if (!confirm('このプリセットを削除しますか?')) {
+                return;
+            }
+
+            const presets = loadPresets();
+            const filtered = presets.filter(p => p.id !== presetId);
+            savePresetsToStorage(filtered);
+
+            showPresetModal(); // リストを再表示
+            showToast('プリセットを削除しました');
+        }
+
+        // フォーム値からクエリを生成(プレビュー用)
+        function generateQueryFromValues(values) {
+            const parts = [];
+
+            if (values['keywords']) parts.push(values['keywords']);
+            if (values['exact-phrase']) parts.push(`"${values['exact-phrase']}"`);
+            if (values['or-keywords']) {
+                const words = values['or-keywords'].split(/\s+/);
+                if (words.length > 0) parts.push(`(${words.join(' OR ')})`);
+            }
+            if (values['exclude']) parts.push(`-${values['exclude']}`);
+            if (values['hashtag']) parts.push(`#${values['hashtag'].replace(/^#/, '')}`);
+            if (values['cashtag']) parts.push(`$${values['cashtag'].replace(/^\$/, '')}`);
+            if (values['from-user']) parts.push(`from:${values['from-user'].replace(/^@/, '')}`);
+            if (values['to-user']) parts.push(`to:${values['to-user'].replace(/^@/, '')}`);
+            if (values['mention']) parts.push(`@${values['mention'].replace(/^@/, '')}`);
+            if (values['since-date']) parts.push(`since:${values['since-date']}`);
+            if (values['until-date']) parts.push(`until:${values['until-date']}`);
+            if (values['min-retweets']) parts.push(`min_retweets:${values['min-retweets']}`);
+            if (values['min-faves']) parts.push(`min_faves:${values['min-faves']}`);
+            if (values['min-replies']) parts.push(`min_replies:${values['min-replies']}`);
+
+            ['links', 'images', 'videos', 'media', 'retweets', 'replies', 'quote',
+             'verified', 'follows', 'safe', 'spaces', 'nativeretweets'].forEach(filter => {
+                if (values['filter-' + filter]) parts.push(`filter:${filter}`);
+            });
+
+            if (values['exclude-retweets']) parts.push('-filter:retweets');
+            if (values['exclude-replies']) parts.push('-filter:replies');
+            if (values['language']) parts.push(`lang:${values['language']}`);
+            if (values['url-contains']) parts.push(`url:${values['url-contains']}`);
+
+            return parts.join(' ') || '(条件なし)';
+        }
+
+        // モーダル外クリックで閉じる
+        document.getElementById('preset-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePresetModal();
+            }
+        });
+
+        document.getElementById('save-preset-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSavePresetModal();
+            }
+        });
+    </script>
+</body>
+</html>

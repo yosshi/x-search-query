@@ -53,8 +53,11 @@ npm run deploy
 ```
 
 このコマンドは以下を実行します:
-- 現在のディレクトリ(index.htmlを含む)をNetlifyにアップロード
-- 本番環境に直接デプロイ
+1. distディレクトリを作成してindex.htmlをコピー(ビルド)
+2. distディレクトリの内容をNetlifyにアップロード
+3. 本番環境に直接デプロイ
+
+**デプロイされるファイル:** index.htmlのみ
 
 ### ドラフト環境へのデプロイ(プレビュー)
 
@@ -94,6 +97,24 @@ npx netlify watch
 
 または、Netlifyのダッシュボードでデプロイログを確認してください。
 
+## ビルドとクリーンアップ
+
+### ビルドのみ実行
+
+```bash
+npm run build
+```
+
+distディレクトリにindex.htmlをコピーします。
+
+### ビルド成果物をクリーンアップ
+
+```bash
+npm run clean
+```
+
+distディレクトリを削除します。
+
 ## ワークフロー例
 
 通常の開発フローは以下の通りです:
@@ -107,7 +128,7 @@ npm run deploy:draft
 # プレビューURLで動作確認
 
 # 3. Gitコミット
-git add .
+git add index.html
 git commit -m "機能を追加した"
 
 # 4. 本番環境にデプロイ
@@ -116,6 +137,8 @@ npm run deploy
 # 5. Gitにpush(オプション)
 git push origin main
 ```
+
+**注意:** distディレクトリは自動生成されるため、Gitにコミットする必要はありません。
 
 ## 自動デプロイへの移行(将来的な選択肢)
 

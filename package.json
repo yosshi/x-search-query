@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "description": "X.com 検索クエリビルダー",
   "scripts": {
-    "deploy": "netlify deploy --prod --dir .",
-    "deploy:draft": "netlify deploy --dir ."
+    "build": "mkdir -p dist && cp index.html dist/",
+    "deploy": "npm run build && netlify deploy --prod --dir dist",
+    "deploy:draft": "npm run build && netlify deploy --dir dist",
+    "clean": "rm -rf dist"
   },
   "keywords": ["x", "twitter", "search", "query-builder"],
   "author": "",

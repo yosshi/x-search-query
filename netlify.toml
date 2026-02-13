@@ -1,0 +1,20 @@
+[build]
+  # ビルドコマンドは不要(静的HTMLファイルのみ)
+  publish = "dist"
+
+[build.environment]
+  # 環境変数は不要
+
+[[headers]]
+  # すべてのHTMLファイルにキャッシュヘッダーを設定
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  # 静的アセット(今回は該当なし)
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

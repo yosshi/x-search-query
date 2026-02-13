@@ -1,0 +1,15 @@
+{
+  "name": "x-search-query",
+  "version": "1.0.0",
+  "description": "X.com 検索クエリビルダー",
+  "scripts": {
+    "deploy": "netlify deploy --prod --dir .",
+    "deploy:draft": "netlify deploy --dir ."
+  },
+  "keywords": ["x", "twitter", "search", "query-builder"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  }
+}

@@ -922,7 +922,12 @@
             const query = queryDisplay.textContent;
             if (query && !queryDisplay.classList.contains('empty')) {
                 const encodedQuery = encodeURIComponent(query);
-                window.open(`https://x.com/search?q=${encodedQuery}&src=typed_query`, '_blank');
+                let url = `https://x.com/search?q=${encodedQuery}&src=typed_query`;
+                const sortOrder = document.getElementById('sort-order').value;
+                if (sortOrder) {
+                    url += `&f=${sortOrder}`;
+                }
+                window.open(url, '_blank');
             }
         }
 
